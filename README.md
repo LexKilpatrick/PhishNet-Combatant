@@ -1,8 +1,4 @@
-# React + Vite
+# PhishNet-Combatant
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![image](https://github.com/LexKilpatrick/PhishNet-Combatant/assets/31899587/2b7ef382-ce73-4c44-a0f9-c49857e32ae4)
+PhishNet-Combatant is a phishing email detector which deploys machine learning algorithms to detect phishing emails. This was created for TAMUHack X. 
