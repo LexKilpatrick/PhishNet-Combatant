@@ -18,4 +18,4 @@ npm run dev
 
 Finally, open the server IP in a browser.
 
-NOTE: The website is *STILL* a work in progress. Meaning, the email checking functionality does not work yet. In order to have an email checked for phishing, simply forward the email to PhishNet-Combatant at phishnetcombatant@gmail.com, and wait for a reply. 
+NOTE: The website is *STILL* a work in progress. Meaning, the email checking functionality *for the website* does not work yet. In order to have an email checked for phishing, simply forward the email to PhishNet-Combatant at phishnetcombatant@gmail.com, and wait for a reply. 
