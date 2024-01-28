@@ -13,93 +13,9 @@ import json
 import re
 
 
-# def read_emails(server, email_id, password, mailbox='INBOX', email_criteria='UNSEEN'):
-#     while True:
-#         emails=[]
-#         mail = imaplib.IMAP4_SSL(server)
-#         mail.login(email_id, password)
-#         mail.select(mailbox)
-
-#         status, email_ids = mail.search(None, email_criteria)
-#         if status != 'OK':
-#             print("No emails found!")
-#             return
-
-#         for e_id in email_ids[0].split():
-#             status, data = mail.fetch(e_id, '(RFC822)')
-#             if status != 'OK':
-#                 print("Error fetching the email")
-#                 continue
-
-#             # parse the email content
-#             email_msg = email.message_from_bytes(data[0][1])
-#             sender=(f"From: {email_msg['from']}")
-#             subject=(f"Subject: {email_msg['subject']}")
-
-#             if email_msg.is_multipart():
-#                 for part in email_msg.walk():
-#                     if part.get_content_type() == "text/plain":
-#                         content=(part.get_payload(decode=True).decode())
-#             else:
-#                 content=(email_msg.get_payload(decode=True).decode())
-
-#             emails.append({'from': sender, 'subject': subject, 'body': content})
-        
-
-        
-        # mail.close()
-        # mail.logout()
-        # return emails
-
-def read_emails(server, email_id, password, mailbox='INBOX', email_criteria='UNSEEN'):
-    # while True:
-        emails = []
-        mail = imaplib.IMAP4_SSL(server)
-        mail.login(email_id, password)
-        mail.select(mailbox)
-
-        status, email_ids = mail.search(None, email_criteria)
-        if status != 'OK':
-            print("No emails found!")
-            return
-
-        for e_id in email_ids[0].split():
-            status, data = mail.fetch(e_id, '(RFC822)')
-            if status != 'OK':
-                print("Error fetching the email")
-                continue
-
-            # Parse the email content
-            email_msg = email.message_from_bytes(data[0][1])
-
-            # Check for forwarded email pattern
-            forwarded_pattern = r"----- Forwarded message -----.*?From: (.+?)\n"
-
-            if email_msg.is_multipart():
-                for part in email_msg.walk():
-                    if part.get_content_type() == "text/plain":
-                        content = part.get_payload(decode=True).decode()
-                        match = re.search(forwarded_pattern, content, re.DOTALL)
-                        if match:
-                            sender = f"From: {match.group(1)}"
-                            break
-                    else:
-                        sender = f"From: {email_msg['from']}"
-            else:
-                content = email_msg.get_payload(decode=True).decode()
-                match = re.search(forwarded_pattern, content, re.DOTALL)
-                if match:
-                    sender = f"From: {match.group(1)}"
-                else:
-                    sender = f"From: {email_msg['from']}"
-
-            subject = f"Subject: {email_msg['subject']}"
-            emails.append({'from': sender, 'subject': subject, 'body': content})
-            return emails
-
 class model:
-    def __init__(self, model_path="model"):
-        self.model_path = "model"  # The directory should contain pytorch_model.bin and other necessary files
+    def __init__(self, model_path="src/backend/model"):
+        self.model_path = "src/backend/model"  # The directory should contain pytorch_model.bin and other necessary files
         self.classifier = pipeline('text-classification', model=model_path)
     
     def predict(self, text):
@@ -115,7 +31,7 @@ class Email:
 
         extractor = urlextract.URLExtract()
         urls = extractor.find_urls(self.body)
-        self.links = [self.analyze_url(url) for url in urls]
+        self.links = [self.analyze_url(url) for url in urls if 'urldefense' not in url]
 
         self.smtpServer = 'smtp.gmail.com'
         self.user = 'phishnetcombatant@gmail.com'
@@ -127,7 +43,7 @@ class Email:
     
 
     def analyze_url(self, url):
-        url=(f"https://www.ipqualityscore.com/api/json/url/GgYkUjBka1HqmkaMCoBfflvnmzySgghJ/{quote(url, safe='')}")
+        url=(f"https://www.ipqualityscore.com/api/json/url/r65d0SnlG42inZOuStz6IeVS9H94nrNb/{quote(url, safe='')}")
         try:
             response = requests.get(url)
             response.raise_for_status()  # Raise an exception for bad status codes (e.g., 404)
@@ -139,7 +55,7 @@ class Email:
             return None
     
     def checkEmailAddress(self):
-        url=(f"https://www.ipqualityscore.com/api/json/email/GgYkUjBka1HqmkaMCoBfflvnmzySgghJ/{self.sender.split(' ')[-1]}")
+        url=(f"https://www.ipqualityscore.com/api/json/email/r65d0SnlG42inZOuStz6IeVS9H94nrNb/{self.sender.split(' ')[-1]}")
         try:
             response = requests.get(url)
             response.raise_for_status()  # Raise an exception for bad status codes (e.g., 404)
@@ -153,7 +69,7 @@ class Email:
     
     def reply(self, html_message):
         # Create an HTML message
-        msg = MIMEText(html_message, 'html')
+        msg = MIMEText(html_message, 'plain')
         msg['Subject'] = self.subject.replace("Subject: ", "")
         msg['From'] = self.user.replace("To: ", "")
         msg['To'] = self.original_message['from']
@@ -170,72 +86,61 @@ class Email:
 
         print("Email sent to", self.original_message['from'])
 
-
     def format_links_info(self):
-        # Start the HTML layout table
-        html = "<table><tr>"
         keep=['redirected', 'suspicious','malware','phishing','category']
-        # Loop through each JSON object and create a table for each
+        message=""
         for i, data in enumerate(self.links):
-            html += f"<td><table border='1'><tr><th>Link{i+1}</th><th>{data['final_url']}</th></tr>"  # Each table in its own cell
+            message+=f"Domain {i+1}\n{data['domain']}\n"
             for key, value in data.items():
                 if key not in keep:
                     continue
+                message+=f"{key}: {value}\n"
+            message+="\n"
 
-                # if key=='status_code':
-                #     value=f"{value} ({requests.status_codes._codes[value][0]})"
-                html += f"<tr><td>{key}</td><td>{value}</td></tr>"
-            html += "</table><br>"
+        return message
 
-        # Close the layout table tag
-        html += "</tr></table>"
 
-                # texts=""
-        # for i, link in enumerate(self.links):
-        #     texts+=str(i+1)+":\n"
-        #     for key, value in link.items():
-        #         texts+=(f"{key}: {value}\n")
-        
-        return html
-        
     def format_email_info(self):
-        # Start the HTML layout table
-        html = "<table><tr>"
+        message=""
         keep=['disposable','leaked']
         content=self.checkEmailAddress()
-        print(content['sanitized_email'])
-        html += f"<td><table border='1'><tr><th>Sender Email</th><th>{content['sanitized_email'][1:]}</th></tr>"  # Each table in its own cell
+        message+=f"Sender Email\n{content['sanitized_email'][1:-1]}\n"
         for key, value in content.items():
             if key not in keep:
                 continue
-            html += f"<tr><td>{key}</td><td>{value}</td></tr>"
-        html += "</table><br>"
+            message+=f"{key}: {value}\n"
+        message+="\n"
 
-        # Close the layout table tag
-        html += "</tr></table>"
+        return message
         
-        return html
+
+
+    # def format_links_info(self):
+    #     message=""
+    #     keep=['redirected', 'suspicious','malware','phishing','category']
+    #     for i, data in enumerate(self.links):
+    #         message+=f"Domain {i+1}\n{data['domain']}\n"
+    #         for key, value in data.items():
+    #             if key not in keep:
+    #                 continue
+    #             message+=f"{key}: {value}\n"
+    #         message+="\n"
+
+    #     return f"<table>{message}</table>"
+        
+    # def format_email_info(self):
+    #     message=""
+    #     keep=['disposable','leaked']
+    #     content=self.checkEmailAddress()
+    #     message+=f"Sender Email\n{content['sanitized_email'][1:-1]}\n"
+    #     for key, value in content.items():
+    #         if key not in keep:
+    #             continue
+    #         message+=f"{key}: {value}\n"
+    #     message+="\n"
+
+    #     return f"<table>{message}</table>"
 
     def __str__(self):
         return f"{self.sender}\n{self.subject}\n{self.body}"
     
-
-
-# smtpServer = 'smtp.gmail.com'
-# user = 'phishnetcombatant@gmail.com'
-# password = 'tfen yldy bojq fujw'
-
-# newEmails=read_emails('imap.gmail.com', user, password, email_criteria='UNSEEN')
-
-# e=newEmails[-1]
-# e=Email(e['from'], e['subject'], e['body'])
-# print(e)
-# confidence_percentage = e.prediction['score'] * 100
-# # e.reply(
-# # f"<p>Phishnet Combatant is {confidence_percentage:.1f}% confident that this is a {e.prediction['label']}.</p>"+
-# # f"<p>{len(e.links)} links were found in this email.\n</p>"+
-# # e.format_links_info()
-# # e.format_email_info()
-#         # )       
-# print(e.checkEmailAddress())
-# print(e.format_links_info())

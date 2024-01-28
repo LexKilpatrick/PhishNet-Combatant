@@ -1,20 +1,10 @@
 from email_format import Email
-import smtplib
 import imaplib
 import email
 import time
-from os import path
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from transformers import pipeline
-import urlextract
-import validators
-import requests
-from urllib.parse import quote
-import json
 import re
 
-def read_emails(server, email_id, password, mailbox='INBOX', email_criteria='UNSEEN'):
+def monitor_emails(server, email_id, password, mailbox='INBOX', email_criteria='UNSEEN'):
     mail = imaplib.IMAP4_SSL(server)
     mail.login(email_id, password)
     print("Logged in successfully!")
@@ -64,18 +54,18 @@ def read_emails(server, email_id, password, mailbox='INBOX', email_criteria='UNS
             e=Email(e['from'], e['subject'], e['body'], e['original'])
             confidence_percentage = e.prediction['score'] * 100
             e.reply(
-            f"<p>Phishnet Combatant is {confidence_percentage:.1f}% confident that this is a {'safe' if e.get_prediction()[0]['label'] == 'SAVE EMAIL' else 'potentially dangerous'} email.</p>"+
-            f"<p>{len(e.links)} links were found in this email.\n</p>"+
+            f"Phishnet Combatant is {confidence_percentage:.1f}% confident that this is a {'safe' if e.get_prediction()[0]['label'] == 'SAVE EMAIL' else 'potentially dangerous'} email.\n"+
+            f"{len(e.links)} links were found in this email.\n"+"\n"+
             e.format_links_info()+
             e.format_email_info()
                     )       
 
-        time.sleep(5)
+        # time.sleep(5)
 
 
 smtpServer = 'smtp.gmail.com'
 user = 'phishnetcombatant@gmail.com'
-password = ''
+password = 'tfen yldy bojq fujw'
 
-read_emails('imap.gmail.com', user, password, email_criteria='UNSEEN')
+monitor_emails('imap.gmail.com', user, password, email_criteria='UNSEEN')
 
