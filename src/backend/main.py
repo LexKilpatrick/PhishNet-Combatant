@@ -3,6 +3,8 @@ import imaplib
 import email
 import time
 import re
+import os
+from dotenv import load_dotenv
 
 def monitor_emails(server, email_id, password, mailbox='INBOX', email_criteria='UNSEEN'):
     mail = imaplib.IMAP4_SSL(server)
@@ -64,8 +66,8 @@ def monitor_emails(server, email_id, password, mailbox='INBOX', email_criteria='
 
 
 smtpServer = 'smtp.gmail.com'
-user = 'phishnetcombatant@gmail.com'
-password = 'tfen yldy bojq fujw'
+user = os.getenv('USER')
+password = os.getenv('PASS') 
 
 monitor_emails('imap.gmail.com', user, password, email_criteria='UNSEEN')
 
