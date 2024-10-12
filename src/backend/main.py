@@ -64,6 +64,7 @@ def monitor_emails(server, email_id, password, mailbox='INBOX', email_criteria='
 
         # time.sleep(5)
 
+load_dotenv()
 
 smtpServer = 'smtp.gmail.com'
 user = os.getenv('USER')
