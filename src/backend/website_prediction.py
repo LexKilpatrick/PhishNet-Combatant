@@ -3,7 +3,6 @@ import urlextract
 import smtplib
 import imaplib
 import email
-from os import path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from transformers import pipeline
@@ -13,7 +12,8 @@ import requests
 from urllib.parse import quote
 import json
 import re
-
+import os
+from dotenv import load_dotenv
 
     
 
@@ -37,9 +37,12 @@ def main():
             urls = extractor.find_urls(self.body)
             self.links = [self.analyze_url(url) for url in urls if 'urldefense' not in url]
 
+            load_dotenv()
+
             self.smtpServer = 'smtp.gmail.com'
-            self.user = 'phishnetcombatant@gmail.com'
-            self.password = 'tfen yldy bojq fujw'
+            self.user = os.getenv('USER') 
+            self.password = os.getenv('PASS') 
+            self.ipquality_api_key = os.getenv('IPQUALITY_API_KEY1')
             self.prediction= self.get_prediction()[0]
 
         def get_prediction(self):
@@ -47,7 +50,7 @@ def main():
         
 
         def analyze_url(self, url):
-            url=(f"https://www.ipqualityscore.com/api/json/url/GgYkUjBka1HqmkaMCoBfflvnmzySgghJ/{quote(url, safe='')}")
+            url=(f"https://www.ipqualityscore.com/api/json/url/{self.ipquality_api_key}/{quote(url, safe='')}")
             try:
                 response = requests.get(url)
                 response.raise_for_status()  # Raise an exception for bad status codes (e.g., 404)
@@ -59,7 +62,7 @@ def main():
                 return None
         
         def checkEmailAddress(self):
-            url=(f"https://www.ipqualityscore.com/api/json/email/GgYkUjBka1HqmkaMCoBfflvnmzySgghJ/{self.sender.split(' ')[-1]}")
+            url=(f"https://www.ipqualityscore.com/api/json/email/{self.ipquality_api_key}/{self.sender.split(' ')[-1]}")
             try:
                 response = requests.get(url)
                 response.raise_for_status()  # Raise an exception for bad status codes (e.g., 404)
